@@ -4,14 +4,24 @@
 
 ## Skills
 
-_（持续添加中）_
+- [history-research](history-research/) — 深入调研任何东西的历史与来龙去脉：图文并茂、图片有原始出处，Markdown/HTML/PDF 三份同步，成稿前由无上下文 agent 从 7 个角度审阅。
 
 ## 安装
 
 ```bash
+# SSH（本机 github.com:443 被封时可用）
 git clone git@github.com:Xingkai98/kai-skills.git
+# 或 HTTPS：git clone https://github.com/Xingkai98/kai-skills.git
+
+mkdir -p ~/.claude/skills
 ln -s "$PWD/kai-skills/<skill-name>" ~/.claude/skills/<skill-name>
+
+# 某些 skill 有 Python 依赖，按该 skill 的 requirements.txt 安装，例如：
+python3 -m venv ~/.venvs/history-research
+~/.venvs/history-research/bin/pip install -r kai-skills/history-research/requirements.txt
 ```
+
+安装或更新软链后重启 Claude Code（或重新加载会话），新 skill 才会出现在可用列表里。
 
 ## 编写约定
 

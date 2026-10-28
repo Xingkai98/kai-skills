@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "md": "report.md",
+  "md_sha256": "42258572b1a28c7bb55dbd767dc8fc658eaa488b30ff73a57a66d94e0423ee9b",
+  "html": "report.html",
+  "html_sha256": "e78acf467b5f25b6bb4b691c697d2cb05e50117d07df7dc5e75fb3647d737b98",
+  "pdf": "report.pdf",
+  "pdf_sha256": "aef220ec219cce01e5f6ab131a68e9a4e395e3191a8a4db421fdeddabbf819bf",
+  "pdf_engine": "playwright",
+  "images": [
+    {
+      "line": 22,
+      "caption": "图 1：京密引水渠—温泉镇水史时间轴",
+      "image_url": "assets/timeline.png",
+      "source_label": "北京市水务局",
+      "source_url": "https://swj.beijing.gov.cn/swdt/swyw/202606/t20260610_4693988.html",
+      "source_note": "作者据该报道及地方志绘制",
+      "local_path": "assets/img/f89f032bbf9883c7.png",
+      "content_type": "image/png",
+      "bytes": 401834,
+      "sha256": "1c29fc454b8a5b650432c90ca3b229627b9193bda691e427b58acc9bbd61ce17",
+      "width": 3600,
+      "height": 2520,
+      "warning": "",
+      "placeholder": false
+    }
+  ],
+  "built_at": "2026-10-28T09:32:13.441990+00:00"
+}

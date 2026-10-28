@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}">
+  <meta name="generator" content="history-research">
+  <meta name="report-md-sha256" content="{{ md_hash }}">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data: file:; style-src 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'">
+  <style>{{ css|safe }}</style>
+</head>
+<body>
+  <div class="page">
+    <header class="cover">
+      <div class="cover-kicker">历史调研报告</div>
+      <h1>{{ title }}</h1>
+      {% if subtitle %}<p class="cover-subtitle">{{ subtitle }}</p>{% endif %}
+      <div class="cover-rule"></div>
+      <div class="cover-meta">
+        {% if date %}<div><span>日期</span>{{ date }}</div>{% endif %}
+        {% if sources_cutoff %}<div><span>资料截止</span>{{ sources_cutoff }}</div>{% endif %}
+        {% if scope %}<div><span>范围</span>{{ scope }}</div>{% endif %}
+        {% if author %}<div><span>作者</span>{{ author }}</div>{% endif %}
+      </div>
+      <div class="cover-foot">
+        Markdown 源文件 SHA256 {{ build_stamp }}… · 共 {{ image_count }} 张有出处图片
+      </div>
+    </header>
+
+    {{ toc|safe }}
+
+    <main class="report-body">
+      {{ content|safe }}
+    </main>
+
+    <section class="image-credits" id="image-credits">
+      <h2>图片出处</h2>
+      <p class="muted">图片地址列显示远程原图链接或本地副本路径；来源页面列保留原始页面链接，正文图注同时保留来源。</p>
+      {{ image_credits|safe }}
+    </section>
+
+    <footer class="report-footer">
+      <p>本报告由 <code>history-research</code> 从 <code>report.md</code> 编译。源文件 SHA256 <code>{{ build_stamp }}…</code>；生成时间 {{ generated_at }}。</p>
+      <p>修改内容请只改 Markdown，然后重新 build；<code>check</code> 会校验三份产物是否同步。</p>
+    </footer>
+  </div>
+</body>
+</html>

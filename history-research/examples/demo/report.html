@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>一条渠的三层时间</title>
+  <meta name="description" content="用一个最小示例展示：时间轴、图片出处、证据分级，以及 Markdown 到 HTML/PDF 的同步构建。">
+  <meta name="generator" content="history-research">
+  <meta name="report-md-sha256" content="42258572b1a28c7bb55dbd767dc8fc658eaa488b30ff73a57a66d94e0423ee9b">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data: file:; style-src 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'">
+  <style>:root {
+  --ink: #1d2329;
+  --ink-soft: #37424b;
+  --muted: #66727c;
+  --accent: #0b5f8a;
+  --accent-dark: #084866;
+  --amber: #b46a1f;
+  --rule: #d9d2c3;
+  --paper: #fffdf8;
+  --canvas: #e9e5dc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: "Noto Sans CJK SC", "Source Han Sans SC", "PingFang SC",
+    "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.86;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 64px 76px 80px;
+  background: var(--paper);
+  box-shadow: 0 18px 60px rgba(42, 36, 25, 0.12);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(11, 95, 138, 0.28);
+}
+
+a:hover {
+  color: var(--accent-dark);
+  border-bottom-color: var(--accent-dark);
+}
+
+.cover {
+  min-height: 620px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 0 56px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 42px;
+}
+
+.cover-kicker {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.cover h1 {
+  margin: 18px 0 12px;
+  font-size: clamp(2.1rem, 5vw, 3.45rem);
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+
+.cover-subtitle {
+  margin: 0;
+  max-width: 720px;
+  color: var(--ink-soft);
+  font-size: 1.18rem;
+  line-height: 1.7;
+}
+
+.cover-rule {
+  width: 88px;
+  height: 5px;
+  margin: 30px 0 28px;
+  background: var(--amber);
+}
+
+.cover-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 28px;
+  max-width: 720px;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+.cover-meta span {
+  display: inline-block;
+  min-width: 5.5em;
+  color: var(--muted);
+}
+
+.cover-foot {
+  margin-top: 36px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+.report-body h1 {
+  font-size: 2rem;
+  line-height: 1.3;
+  margin: 2.4em 0 0.7em;
+}
+
+h2 {
+  margin: 2.7em 0 0.8em;
+  padding-left: 14px;
+  border-left: 5px solid var(--accent);
+  font-size: 1.6rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  margin: 2em 0 0.6em;
+  color: var(--accent-dark);
+  font-size: 1.22rem;
+  line-height: 1.45;
+}
+
+h4 {
+  margin: 1.6em 0 0.5em;
+  font-size: 1.05rem;
+}
+
+p {
+  margin: 0 0 1.05em;
+  text-align: justify;
+}
+
+ul,
+ol {
+  margin: 0 0 1.15em;
+  padding-left: 1.55em;
+}
+
+li {
+  margin-bottom: 0.35em;
+}
+
+blockquote {
+  margin: 1.6em 0;
+  padding: 1em 1.25em;
+  background: #fbf6ea;
+  border-left: 4px solid var(--amber);
+  color: #4d4435;
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 2.5em 0;
+}
+
+code {
+  padding: 0.08em 0.32em;
+  border-radius: 4px;
+  background: #f0ece2;
+  font-family: "SFMono-Regular", "Cascadia Code", "Liberation Mono", monospace;
+  font-size: 0.9em;
+}
+
+pre {
+  overflow: auto;
+  padding: 1em 1.2em;
+  border-radius: 8px;
+  background: #242a2f;
+  color: #f3f0e8;
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.data-table {
+  width: 100%;
+  margin: 1.5em 0;
+  border-collapse: collapse;
+  font-size: 0.92em;
+  line-height: 1.65;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.58em 0.72em;
+  border: 1px solid var(--rule);
+  vertical-align: top;
+  text-align: left;
+}
+
+.data-table th {
+  background: #f4f0e7;
+  font-weight: 700;
+}
+
+.data-table tr:nth-child(even) td {
+  background: #fbf9f4;
+}
+
+figure.report-figure {
+  margin: 2.2em 0;
+  padding: 0;
+}
+
+figure.report-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: #f6f3eb;
+}
+
+figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em 1em;
+  margin-top: 0.65em;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.62;
+  text-align: left;
+}
+
+.fig-caption {
+  color: var(--ink-soft);
+}
+
+.fig-note {
+  color: var(--muted);
+}
+
+.toc {
+  margin: 0 0 56px;
+  padding: 22px 26px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: #f7f3ea;
+}
+
+.toc h2 {
+  margin: 0 0 0.65em;
+  padding: 0;
+  border: 0;
+  font-size: 1.08rem;
+  letter-spacing: 0.08em;
+}
+
+.toc-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.toc-h3 {
+  margin-left: 1.2em;
+  font-size: 0.95em;
+}
+
+.image-credits {
+  margin-top: 64px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+}
+
+.image-credits h2 {
+  border-left-color: var(--amber);
+}
+
+.credits-table {
+  font-size: 0.82em;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.report-footer {
+  margin-top: 56px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.report-footer p {
+  margin-bottom: 0.4em;
+  text-align: left;
+}
+
+@media (max-width: 720px) {
+  body {
+    font-size: 16px;
+  }
+
+  .page {
+    padding: 32px 22px 48px;
+  }
+
+  .cover {
+    min-height: 460px;
+  }
+
+  .cover-meta {
+    grid-template-columns: 1fr;
+  }
+
+  h2 {
+    font-size: 1.38rem;
+  }
+
+  .wide-figure {
+    overflow-x: auto;
+    padding-bottom: 0.4em;
+  }
+
+  .wide-figure img {
+    min-width: 720px;
+  }
+
+  .image-credits {
+    overflow-x: auto;
+  }
+
+  .credits-table {
+    min-width: 640px;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 18mm 14mm 20mm;
+  }
+
+  body {
+    background: #fff;
+    font-size: 10.5pt;
+    line-height: 1.75;
+  }
+
+  .page {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    box-shadow: none;
+  }
+
+  .cover {
+    position: relative;
+    min-height: 238mm;
+    margin-bottom: 0;
+    border-bottom: 0;
+    page-break-after: always;
+  }
+
+  .cover-foot {
+    position: absolute;
+    bottom: 12mm;
+    left: 0;
+  }
+
+  .toc {
+    background: #faf8f3;
+    page-break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+
+  figure.report-figure,
+  .data-table,
+  blockquote,
+  pre {
+    page-break-inside: avoid;
+  }
+
+  a {
+    color: inherit;
+    border-bottom: 0;
+  }
+
+  .image-credits {
+    page-break-inside: avoid;
+  }
+}
+</style>
+</head>
+<body>
+  <div class="page">
+    <header class="cover">
+      <div class="cover-kicker">历史调研报告</div>
+      <h1>一条渠的三层时间</h1>
+      <p class="cover-subtitle">京密引水渠与温泉镇的水史</p>
+      <div class="cover-rule"></div>
+      <div class="cover-meta">
+        <div><span>日期</span>2026-10-28</div>
+        <div><span>资料截止</span>2026-10-28</div>
+        <div><span>范围</span>北京海淀温泉镇；1292—2026</div>
+        <div><span>作者</span>kai-skills demo</div>
+      </div>
+      <div class="cover-foot">
+        Markdown 源文件 SHA256 42258572b1a2… · 共 1 张有出处图片
+      </div>
+    </header>
+
+    <nav class="toc" aria-label="目录">
+<h2>目录</h2>
+<ol class="toc-list">
+<li class="toc-h2"><a href="#sec-1">问题的提出</a></li>
+<li class="toc-h2"><a href="#sec-2">时间轴</a></li>
+<li class="toc-h2"><a href="#sec-3">一、渠：新渠走老线</a></li>
+<li class="toc-h2"><a href="#sec-4">二、镇：泉、祠、码头</a></li>
+<li class="toc-h2"><a href="#sec-5">信史、争议与传说</a></li>
+<li class="toc-h2"><a href="#sec-6">参考资料</a></li>
+<li class="toc-h2"><a href="#image-credits">图片出处</a></li>
+</ol>
+</nav>
+
+    <main class="report-body">
+      <blockquote>
+<p><strong>一句话结论</strong>：京密引水渠是 1960 年代修成的人工渠，却大体走在 700 年前元代白浮瓮山河的附近；它穿过温泉镇时，又把明清村落、民国纪念地和当代河长制串在了同一条水线上。</p>
+</blockquote>
+<h2 id="sec-1">问题的提出</h2>
+<p>温泉镇的河长公示牌上写着“京密引水渠（沙河）流域”。一条人工渠为什么会被放进“沙河流域”？它和元代郭守敬的引水线是什么关系？这篇最小示例只回答一个问题：<strong>这条渠在温泉镇一带，叠着哪几层时间？</strong></p>
+<h2 id="sec-2">时间轴</h2>
+<figure class="report-figure wide-figure" id="fig-1" data-source-url="https://swj.beijing.gov.cn/swdt/swyw/202606/t20260610_4693988.html">
+  <img src="assets/img/f89f032bbf9883c7.png" alt="图 1：京密引水渠—温泉镇水史时间轴">
+  <figcaption>
+    <span class="fig-caption">图 1：京密引水渠—温泉镇水史时间轴</span>
+    <span class="fig-source">图源：<a href="https://swj.beijing.gov.cn/swdt/swyw/202606/t20260610_4693988.html" target="_blank" rel="noopener">北京市水务局</a></span><span class="fig-note">作者据该报道及地方志绘制</span>
+  </figcaption>
+</figure>
+<table class="data-table">
+<thead>
+<tr>
+<th>时间</th>
+<th>事件</th>
+<th>依据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1292</td>
+<td>郭守敬开白浮瓮山河</td>
+<td><a href="http://epaper.gmw.cn/wzb/html/2025-07/30/nw.D110000wzb_20250730_2-05.htm" rel="noopener" target="_blank">《郭守敬修筑白浮瓮山河》</a></td>
+</tr>
+<tr>
+<td>1732</td>
+<td>白家疃怡贤亲王祠始建</td>
+<td><a href="https://zyk.bjhd.gov.cn/kjhd/whhd/hdww/wwcl/202208/t20220801_4545961.shtml" rel="noopener" target="_blank">海淀文物长廊</a></td>
+</tr>
+<tr>
+<td>1937</td>
+<td>辛亥滦州起义纪念园落成</td>
+<td><a href="https://wwj.beijing.gov.cn/bjww/362771/362779/dlpqgzdwwbhdw/523481/index.html" rel="noopener" target="_blank">北京市文物局</a></td>
+</tr>
+<tr>
+<td>1958—1960</td>
+<td>密云水库开工、建成</td>
+<td><a href="http://www.chinawater.com.cn/newscenter/ly/haih/202009/t20200903_755798.html" rel="noopener" target="_blank">中国水利报</a></td>
+</tr>
+<tr>
+<td>1960—1966</td>
+<td>京密引水渠两期建成</td>
+<td><a href="https://swj.beijing.gov.cn/swdt/swyw/202606/t20260610_4693988.html" rel="noopener" target="_blank">人民日报</a></td>
+</tr>
+<tr>
+<td>2014</td>
+<td>南水北调中线一期工程通水</td>
+<td><a href="https://swj.beijing.gov.cn/swdt/swyw/202606/t20260610_4693988.html" rel="noopener" target="_blank">人民日报</a></td>
+</tr>
+<tr>
+<td>2015</td>
+<td>密云水库调蓄工程首次反向输水，南水经京密引水渠入密云水库</td>
+<td><a href="http://www.china.org.cn/bjzt/chinese/2015-11/24/content_37143845.htm" rel="noopener" target="_blank">中国网</a></td>
+</tr>
+<tr>
+<td>2016</td>
+<td>中办、国办印发《关于全面推行河长制的意见》</td>
+<td><a href="http://politics.people.com.cn/n1/2016/1211/c1001-28940545.html" rel="noopener" target="_blank">人民网</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="sec-3">一、渠：新渠走老线</h2>
+<p>京密引水渠 1961 年一期建成，1966 年二期通水，全长 110 余公里，从密云水库经怀柔水库入团城湖。它常被说成“沿元代白浮瓮山河故道”。公开报道称，现代京密引水渠白浮村至昆明湖段“大体走向也基本与元代故道一致”；但这只是走向判断，不等于全线压故道，具体线位仍需学术考证。(<a href="https://swj.beijing.gov.cn/swdt/swyw/202606/t20260610_4693988.html" rel="noopener" target="_blank">人民日报</a>；<a href="http://epaper.gmw.cn/wzb/html/2025-07/30/nw.D110000wzb_20250730_2-05.htm" rel="noopener" target="_blank">文摘报</a>)</p>
+<h2 id="sec-4">二、镇：泉、祠、码头</h2>
+<p>白家疃有始建于雍正十年（1732）的怡贤亲王祠；太舟坞有黑龙潭及龙王庙，据当地记述因元代白浮瓮山河码头得名。(<a href="https://zyk.bjhd.gov.cn/kjhd/whhd/hdww/wwcl/202208/t20220801_4545961.shtml" rel="noopener" target="_blank">海淀文物长廊</a>；<a href="https://www.beijing.gov.cn/fuwu/bmfw/sy/jrts/202609/t20260910_4857775.html" rel="noopener" target="_blank">北京市政府</a>；<a href="https://zyk.bjhd.gov.cn/sjkf/zxsj/202308/t20230831_4625042.shtml" rel="noopener" target="_blank">海淀区文旅局</a>)</p>
+<h2 id="sec-5">信史、争议与传说</h2>
+<ul>
+<li><strong>较可靠</strong>：密云水库与京密引水渠的时间线、辛亥滦州起义纪念园、怡贤亲王祠。</li>
+<li><strong>需要限定</strong>：“沿故道”只在“大体走向”的意义上成立；具体线位仍需学术考证。</li>
+<li><strong>地方记忆/争议</strong>：曹雪芹徙居白家疃属于地方记忆或红学争议，需与志书、文物名录分开看。(<a href="https://news.sina.com.cn/c/2013-11-11/033028673420.shtml" rel="noopener" target="_blank">新浪新闻</a>)</li>
+</ul>
+<h2 id="sec-6">参考资料</h2>
+<ol>
+<li><a href="https://swj.beijing.gov.cn/swdt/swyw/202606/t20260610_4693988.html" rel="noopener" target="_blank">运行60年，这条渠更年轻</a> — 人民日报，2026-06-10。</li>
+<li><a href="http://epaper.gmw.cn/wzb/html/2025-07/30/nw.D110000wzb_20250730_2-05.htm" rel="noopener" target="_blank">郭守敬修筑白浮瓮山河</a> — 文摘报，2025-07-30。</li>
+<li><a href="https://zyk.bjhd.gov.cn/kjhd/whhd/hdww/wwcl/202208/t20220801_4545961.shtml" rel="noopener" target="_blank">怡贤亲王祠</a> — 海淀区文旅局，2020-01-25。</li>
+<li><a href="https://www.beijing.gov.cn/fuwu/bmfw/sy/jrts/202609/t20260910_4857775.html" rel="noopener" target="_blank">御碑守望古莲池</a> — 北京市政府，2026-09-10。</li>
+<li><a href="https://news.sina.com.cn/c/2013-11-11/033028673420.shtml" rel="noopener" target="_blank">贤王祠与曹雪芹小道</a> — 北京日报/新浪，2013-11-11。</li>
+<li><a href="http://www.chinawater.com.cn/newscenter/ly/haih/202009/t20200903_755798.html" rel="noopener" target="_blank">密云水库：新中国水利史上的一座丰碑</a> — 中国水利报，2020-09-03。</li>
+<li><a href="http://politics.people.com.cn/n1/2016/1211/c1001-28940545.html" rel="noopener" target="_blank">中办国办印发《关于全面推行河长制的意见》</a> — 人民网，2016-12-11。</li>
+<li><a href="https://zyk.bjhd.gov.cn/sjkf/zxsj/202308/t20230831_4625042.shtml" rel="noopener" target="_blank">2023年度海淀区文物保护单位名录</a> — 海淀区文旅局。</li>
+</ol>
+
+    </main>
+
+    <section class="image-credits" id="image-credits">
+      <h2>图片出处</h2>
+      <p class="muted">图片地址列显示远程原图链接或本地副本路径；来源页面列保留原始页面链接，正文图注同时保留来源。</p>
+      <table class="data-table credits-table">
+<thead><tr><th>图</th><th>说明</th><th>图片地址</th><th>来源页面</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>图 1：京密引水渠—温泉镇水史时间轴</td><td><code>assets/img/f89f032bbf9883c7.png</code></td><td><a href="https://swj.beijing.gov.cn/swdt/swyw/202606/t20260610_4693988.html" target="_blank" rel="noopener">北京市水务局</a></td><td>作者据该报道及地方志绘制</td></tr>
+</tbody>
+</table>
+    </section>
+
+    <footer class="report-footer">
+      <p>本报告由 <code>history-research</code> 从 <code>report.md</code> 编译。源文件 SHA256 <code>42258572b1a2…</code>；生成时间 2026-10-28 09:32 UTC。</p>
+      <p>修改内容请只改 Markdown，然后重新 build；<code>check</code> 会校验三份产物是否同步。</p>
+    </footer>
+  </div>
+</body>
+</html>

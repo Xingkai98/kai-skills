@@ -1,0 +1,414 @@
+:root {
+  --ink: #1d2329;
+  --ink-soft: #37424b;
+  --muted: #66727c;
+  --accent: #0b5f8a;
+  --accent-dark: #084866;
+  --amber: #b46a1f;
+  --rule: #d9d2c3;
+  --paper: #fffdf8;
+  --canvas: #e9e5dc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: "Noto Sans CJK SC", "Source Han Sans SC", "PingFang SC",
+    "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.86;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 64px 76px 80px;
+  background: var(--paper);
+  box-shadow: 0 18px 60px rgba(42, 36, 25, 0.12);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(11, 95, 138, 0.28);
+}
+
+a:hover {
+  color: var(--accent-dark);
+  border-bottom-color: var(--accent-dark);
+}
+
+.cover {
+  min-height: 620px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 0 56px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 42px;
+}
+
+.cover-kicker {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.cover h1 {
+  margin: 18px 0 12px;
+  font-size: clamp(2.1rem, 5vw, 3.45rem);
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+
+.cover-subtitle {
+  margin: 0;
+  max-width: 720px;
+  color: var(--ink-soft);
+  font-size: 1.18rem;
+  line-height: 1.7;
+}
+
+.cover-rule {
+  width: 88px;
+  height: 5px;
+  margin: 30px 0 28px;
+  background: var(--amber);
+}
+
+.cover-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 28px;
+  max-width: 720px;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+.cover-meta span {
+  display: inline-block;
+  min-width: 5.5em;
+  color: var(--muted);
+}
+
+.cover-foot {
+  margin-top: 36px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+.report-body h1 {
+  font-size: 2rem;
+  line-height: 1.3;
+  margin: 2.4em 0 0.7em;
+}
+
+h2 {
+  margin: 2.7em 0 0.8em;
+  padding-left: 14px;
+  border-left: 5px solid var(--accent);
+  font-size: 1.6rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  margin: 2em 0 0.6em;
+  color: var(--accent-dark);
+  font-size: 1.22rem;
+  line-height: 1.45;
+}
+
+h4 {
+  margin: 1.6em 0 0.5em;
+  font-size: 1.05rem;
+}
+
+p {
+  margin: 0 0 1.05em;
+  text-align: justify;
+}
+
+ul,
+ol {
+  margin: 0 0 1.15em;
+  padding-left: 1.55em;
+}
+
+li {
+  margin-bottom: 0.35em;
+}
+
+blockquote {
+  margin: 1.6em 0;
+  padding: 1em 1.25em;
+  background: #fbf6ea;
+  border-left: 4px solid var(--amber);
+  color: #4d4435;
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 2.5em 0;
+}
+
+code {
+  padding: 0.08em 0.32em;
+  border-radius: 4px;
+  background: #f0ece2;
+  font-family: "SFMono-Regular", "Cascadia Code", "Liberation Mono", monospace;
+  font-size: 0.9em;
+}
+
+pre {
+  overflow: auto;
+  padding: 1em 1.2em;
+  border-radius: 8px;
+  background: #242a2f;
+  color: #f3f0e8;
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.data-table {
+  width: 100%;
+  margin: 1.5em 0;
+  border-collapse: collapse;
+  font-size: 0.92em;
+  line-height: 1.65;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.58em 0.72em;
+  border: 1px solid var(--rule);
+  vertical-align: top;
+  text-align: left;
+}
+
+.data-table th {
+  background: #f4f0e7;
+  font-weight: 700;
+}
+
+.data-table tr:nth-child(even) td {
+  background: #fbf9f4;
+}
+
+figure.report-figure {
+  margin: 2.2em 0;
+  padding: 0;
+}
+
+figure.report-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: #f6f3eb;
+}
+
+figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em 1em;
+  margin-top: 0.65em;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.62;
+  text-align: left;
+}
+
+.fig-caption {
+  color: var(--ink-soft);
+}
+
+.fig-note {
+  color: var(--muted);
+}
+
+.toc {
+  margin: 0 0 56px;
+  padding: 22px 26px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: #f7f3ea;
+}
+
+.toc h2 {
+  margin: 0 0 0.65em;
+  padding: 0;
+  border: 0;
+  font-size: 1.08rem;
+  letter-spacing: 0.08em;
+}
+
+.toc-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.toc-h3 {
+  margin-left: 1.2em;
+  font-size: 0.95em;
+}
+
+.image-credits {
+  margin-top: 64px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+}
+
+.image-credits h2 {
+  border-left-color: var(--amber);
+}
+
+.credits-table {
+  font-size: 0.82em;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.report-footer {
+  margin-top: 56px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.report-footer p {
+  margin-bottom: 0.4em;
+  text-align: left;
+}
+
+@media (max-width: 720px) {
+  body {
+    font-size: 16px;
+  }
+
+  .page {
+    padding: 32px 22px 48px;
+  }
+
+  .cover {
+    min-height: 460px;
+  }
+
+  .cover-meta {
+    grid-template-columns: 1fr;
+  }
+
+  h2 {
+    font-size: 1.38rem;
+  }
+
+  .wide-figure {
+    overflow-x: auto;
+    padding-bottom: 0.4em;
+  }
+
+  .wide-figure img {
+    min-width: 720px;
+  }
+
+  .image-credits {
+    overflow-x: auto;
+  }
+
+  .credits-table {
+    min-width: 640px;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 18mm 14mm 20mm;
+  }
+
+  body {
+    background: #fff;
+    font-size: 10.5pt;
+    line-height: 1.75;
+  }
+
+  .page {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    box-shadow: none;
+  }
+
+  .cover {
+    position: relative;
+    min-height: 238mm;
+    margin-bottom: 0;
+    border-bottom: 0;
+    page-break-after: always;
+  }
+
+  .cover-foot {
+    position: absolute;
+    bottom: 12mm;
+    left: 0;
+  }
+
+  .toc {
+    background: #faf8f3;
+    page-break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+
+  figure.report-figure,
+  .data-table,
+  blockquote,
+  pre {
+    page-break-inside: avoid;
+  }
+
+  a {
+    color: inherit;
+    border-bottom: 0;
+  }
+
+  .image-credits {
+    page-break-inside: avoid;
+  }
+}

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="840" viewBox="0 0 1200 840">
+  <rect width="1200" height="840" fill="#fffdf8"/>
+  <text x="80" y="78" font-family="Noto Sans CJK SC, Source Han Sans SC, sans-serif" font-size="38" font-weight="700" fill="#1d2329">京密引水渠—温泉镇水史</text>
+  <text x="80" y="118" font-family="Noto Sans CJK SC, Source Han Sans SC, sans-serif" font-size="20" fill="#66727c">一条人工渠，叠在七百年的引水线与村落记忆上</text>
+  <line x1="150" y1="170" x2="150" y2="780" stroke="#0b5f8a" stroke-width="4"/>
+  <g font-family="Noto Sans CJK SC, Source Han Sans SC, sans-serif">
+    <circle cx="150" cy="200" r="12" fill="#0b5f8a"/>
+    <text x="190" y="194" font-size="26" font-weight="700" fill="#084866">1292</text>
+    <text x="420" y="194" font-size="24" fill="#1d2329">郭守敬开白浮瓮山河，引白浮泉绕西山入瓮山泊</text>
+
+    <circle cx="150" cy="285" r="12" fill="#0b5f8a"/>
+    <text x="190" y="279" font-size="26" font-weight="700" fill="#084866">1732</text>
+    <text x="420" y="279" font-size="24" fill="#1d2329">白家疃怡贤亲王祠始建</text>
+
+    <circle cx="150" cy="370" r="12" fill="#0b5f8a"/>
+    <text x="190" y="364" font-size="26" font-weight="700" fill="#084866">1937</text>
+    <text x="420" y="364" font-size="24" fill="#1d2329">显龙山辛亥滦州起义纪念园落成</text>
+
+    <circle cx="150" cy="455" r="12" fill="#b46a1f"/>
+    <text x="190" y="449" font-size="26" font-weight="700" fill="#8a4b12">1958—1960</text>
+    <text x="420" y="449" font-size="24" fill="#1d2329">密云水库开工、拦洪、建成蓄水</text>
+
+    <circle cx="150" cy="540" r="12" fill="#b46a1f"/>
+    <text x="190" y="534" font-size="26" font-weight="700" fill="#8a4b12">1960—1966</text>
+    <text x="420" y="534" font-size="24" fill="#1d2329">京密引水渠两期建成，密云水库水入北京城</text>
+
+    <circle cx="150" cy="625" r="12" fill="#b46a1f"/>
+    <text x="190" y="619" font-size="26" font-weight="700" fill="#8a4b12">2014</text>
+    <text x="420" y="619" font-size="24" fill="#1d2329">南水北调中线一期工程通水</text>
+
+    <circle cx="150" cy="705" r="12" fill="#b46a1f"/>
+    <text x="190" y="699" font-size="26" font-weight="700" fill="#8a4b12">2015</text>
+    <text x="420" y="699" font-size="24" fill="#1d2329">密云水库调蓄工程首次反向输水</text>
+
+    <circle cx="150" cy="780" r="12" fill="#b46a1f"/>
+    <text x="190" y="774" font-size="26" font-weight="700" fill="#8a4b12">2016</text>
+    <text x="420" y="774" font-size="24" fill="#1d2329">中办、国办印发《关于全面推行河长制的意见》</text>
+  </g>
+</svg>
