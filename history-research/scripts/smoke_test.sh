@@ -25,7 +25,7 @@ lang: "zh-CN"
 ## 一、测试图
 
 ![图 1：测试时间轴](timeline.png)
-*图源：[示例来源](https://example.com/source) · 作者自绘*
+*图源：用户提供 · 2026-10-28 摄于测试环境*
 
 测试正文。[示例来源](https://example.com/source)
 

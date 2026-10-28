@@ -168,20 +168,40 @@ def strip_first_h1(body: str) -> tuple[str, str | None, int]:
     return body, None, 0
 
 
+USER_IMAGE_LABELS = ("用户提供", "作者拍摄", "自摄", "作者自绘", "作者绘制", "User-provided", "Author photo")
+
+
 def parse_source_line(line: str, line_no: int) -> tuple[str, str, str]:
     m = SOURCE_RE.match(line.strip())
-    require(m is not None, f"line {line_no}: expected a source line like `*图源：[页面](https://...) · 许可*`")
+    require(
+        m is not None,
+        f"line {line_no}: expected a source line like `*图源：[页面](https://...) · 许可*` "
+        "or `*图源：用户提供 · 拍摄者/时间/地点*`",
+    )
     assert m is not None
     body = m.group("body").strip()
     links = LINK_RE.findall(body)
-    require(
-        bool(links),
-        f"line {line_no}: image source line must contain a Markdown link to the original page, e.g. `[北京市水务局](https://...)`",
+    if links:
+        label, angle_url, plain_url = links[0]
+        url = angle_url or plain_url
+        note = LINK_RE.sub("", body).strip(" ·-—|,，;；")
+        return label.strip(), url.strip(), note
+
+    for prefix in USER_IMAGE_LABELS:
+        if body.startswith(prefix):
+            note = body[len(prefix) :].strip(" ·-—|,，;；")
+            require(
+                bool(note),
+                f"line {line_no}: user-provided image needs a note after `{prefix}`: "
+                "who took it, when, and where (or say 拍摄时间不详).",
+            )
+            return prefix, "", note
+
+    raise BuildError(
+        f"line {line_no}: image source must be an http(s) page link, or start with one of "
+        f"{' / '.join(USER_IMAGE_LABELS)} and include who/when/where. "
+        "Example: `*图源：用户提供 · 2026-10-28 摄于北京海淀温泉镇*`"
     )
-    label, angle_url, plain_url = links[0]
-    url = angle_url or plain_url
-    note = LINK_RE.sub("", body).strip(" ·-—|,，;；")
-    return label.strip(), url.strip(), note
 
 
 def parse_images(body: str, line_offset: int = 0) -> tuple[list[ReportImage], dict[int, ReportImage]]:
@@ -432,13 +452,17 @@ def figure_html(image: ReportImage, idx: int) -> str:
     source_url = html_lib.escape(image.source_url, quote=True)
     note = html_lib.escape(image.source_note)
     note_html = f'<span class="fig-note">{note}</span>' if note else ""
+    if image.source_url:
+        source_html = f'<a href="{source_url}" target="_blank" rel="noopener">{source_label}</a>'
+    else:
+        source_html = source_label
     wide = " wide-figure" if image.width and image.height and image.width / image.height >= 1.4 else ""
     return (
         '<figure class="report-figure%s" id="fig-%d" data-source-url="%s">\n'
         '  <img src="%s" alt="%s">\n'
         '  <figcaption>\n'
         '    <span class="fig-caption">%s</span>\n'
-        '    <span class="fig-source">图源：<a href="%s" target="_blank" rel="noopener">%s</a></span>%s\n'
+        '    <span class="fig-source">图源：%s</span>%s\n'
         "  </figcaption>\n"
         "</figure>"
         % (
@@ -448,8 +472,7 @@ def figure_html(image: ReportImage, idx: int) -> str:
             html_lib.escape(src, quote=True),
             html_lib.escape(image.alt, quote=True),
             caption,
-            source_url,
-            source_label,
+            source_html,
             note_html,
         )
     )
@@ -556,12 +579,19 @@ def image_credits_html(images: list[ReportImage]) -> str:
             )
         else:
             image_cell = f"<code>{html_lib.escape(image.local_path or image.url)}</code>"
+        if image.source_url:
+            source_cell = (
+                f'<a href="{html_lib.escape(image.source_url, quote=True)}" '
+                f'target="_blank" rel="noopener">{html_lib.escape(image.source_label)}</a>'
+            )
+        else:
+            source_cell = html_lib.escape(image.source_label)
         rows.append(
             "<tr>"
             f"<td>{i}</td>"
             f"<td>{html_lib.escape(image.caption)}</td>"
             f"<td>{image_cell}</td>"
-            f'<td><a href="{html_lib.escape(image.source_url, quote=True)}" target="_blank" rel="noopener">{html_lib.escape(image.source_label)}</a></td>'
+            f"<td>{source_cell}</td>"
             f"<td>{html_lib.escape(image.source_note)}</td>"
             "</tr>"
         )
@@ -1110,12 +1140,21 @@ def cmd_check(args: argparse.Namespace) -> int:
     if len(figures) != len(ctx.images):
         errors.append(f"HTML has {len(figures)} figures but Markdown has {len(ctx.images)} images")
     for i, image in enumerate(ctx.images, 1):
-        if not image.source_url.startswith(("http://", "https://")):
-            errors.append(f"image {i} source is not an http(s) URL: {image.source_url}")
+        if image.source_url:
+            if not image.source_url.startswith(("http://", "https://")):
+                errors.append(f"image {i} source is not an http(s) URL: {image.source_url}")
+            if image.source_url == image.url:
+                warnings.append(f"image {i} source page is the image file itself; link the original page instead")
+        else:
+            if image.source_label not in USER_IMAGE_LABELS:
+                errors.append(
+                    f"image {i} has no http(s) source and is not labeled as user-provided "
+                    f"({image.source_label!r})"
+                )
+            if not image.source_note:
+                errors.append(f"image {i} is user-provided but has no who/when/where note")
         if not image.source_note:
             warnings.append(f"image {i} has no author/license note after the source link")
-        if image.source_url == image.url:
-            warnings.append(f"image {i} source page is the image file itself; link the original page instead")
         if not image.local_path:
             errors.append(f"image {i} has no local build copy; rebuild")
         elif not (report_dir / image.local_path).exists():
@@ -1145,8 +1184,11 @@ def cmd_check(args: argparse.Namespace) -> int:
                 html_lib.unescape(a.get("href", ""))
                 for a in credits.select("a[href]")
             }
-            if image.source_url not in credit_urls:
-                errors.append(f"image {i} source URL missing from image credits appendix")
+            if image.source_url:
+                if image.source_url not in credit_urls:
+                    errors.append(f"image {i} source URL missing from image credits appendix")
+            elif image.source_label not in credits.get_text(" ", strip=True):
+                errors.append(f"image {i} user-provided label missing from image credits appendix")
 
     by_sha: dict[str, list[ReportImage]] = {}
     for image in ctx.images:
@@ -1246,7 +1288,7 @@ def cmd_check(args: argparse.Namespace) -> int:
     link_verb = "checked online" if args.online else "present in HTML"
     print(
         "OK: md/html/pdf in sync; "
-        f"{len(ctx.images)} images with source links; "
+        f"{len(ctx.images)} images with provenance; "
         f"{len(external_links)} external links {link_verb}"
     )
     return 0
@@ -1293,9 +1335,12 @@ repeats a popular story without labeling it as a story.""",
 the caption says? (2) does the source page link work, and is it the original
 page rather than a search result or hotlink? (3) is the author/license stated,
 and is reuse plausible? (4) is the resolution adequate for print? (5) is the
-caption specific (who/what/where/when) rather than decorative? Flag images
-whose source is a generic homepage, whose license is unknown, or whose caption
-overclaims. Also check the auto-generated image credits appendix.""",
+caption specific (who/what/where/when) rather than decorative? For
+user-provided photos (label 用户提供/作者拍摄/自摄), an external link is not
+required; check that the credit says who took it, when, and where, and that it
+is appropriate to publish. For external images, require the original page.
+Flag images whose source is a generic homepage, whose license is unknown, or
+whose caption overclaims. Also check the auto-generated image credits appendix.""",
     ),
     (
         "05-structure-readability",

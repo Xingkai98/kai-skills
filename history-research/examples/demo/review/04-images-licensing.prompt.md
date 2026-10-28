@@ -31,9 +31,12 @@ Audit every image. For each: (1) does the image actually depict what
 the caption says? (2) does the source page link work, and is it the original
 page rather than a search result or hotlink? (3) is the author/license stated,
 and is reuse plausible? (4) is the resolution adequate for print? (5) is the
-caption specific (who/what/where/when) rather than decorative? Flag images
-whose source is a generic homepage, whose license is unknown, or whose caption
-overclaims. Also check the auto-generated image credits appendix.
+caption specific (who/what/where/when) rather than decorative? For
+user-provided photos (label 用户提供/作者拍摄/自摄), an external link is not
+required; check that the credit says who took it, when, and where, and that it
+is appropriate to publish. For external images, require the original page.
+Flag images whose source is a generic homepage, whose license is unknown, or
+whose caption overclaims. Also check the auto-generated image credits appendix.
 
 ## Output format
 
