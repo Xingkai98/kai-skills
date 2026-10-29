@@ -104,7 +104,7 @@ SKILL_DIR="${CLAUDE_SKILL_DIR:-$HOME/.claude/skills/history-research}"
 ```
 
 `check --strict --require-review` 会校验：7 个输出齐全、`angle` 匹配、`md_sha256`
-等于当前报告、`verdict` 为 PASS、P0/P1 都为 0、每个章节都出现在 `coverage` 中。
+等于当前报告、P0/P1 都为 0（`verdict` 可为 PASS 或 NEEDS WORK；P2 记录后延）、每个章节都出现在 `coverage` 中。
 报告改动后旧审阅会因哈希不匹配而失效，必须重跑。
 
 ## 常见漏审点

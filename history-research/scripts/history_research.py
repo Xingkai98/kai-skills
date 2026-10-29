@@ -168,7 +168,7 @@ def strip_first_h1(body: str) -> tuple[str, str | None, int]:
     return body, None, 0
 
 
-USER_IMAGE_LABELS = ("用户提供", "作者拍摄", "自摄", "作者自绘", "作者绘制", "User-provided", "Author photo")
+USER_IMAGE_LABELS = ("用户提供", "用户拍摄", "作者拍摄", "自摄", "作者自绘", "作者绘制", "User-provided", "Author photo")
 
 
 def parse_source_line(line: str, line_no: int) -> tuple[str, str, str]:
@@ -1002,8 +1002,10 @@ def review_gate_errors(report_dir: Path, sections: list[str], md_hash: str) -> l
             errors.append(
                 f"review/out/{key}.out.md reviewed a different sources.tsv version; re-review"
             )
-        if meta.get("verdict") != "PASS":
-            errors.append(f"review/out/{key}.out.md verdict is {meta.get('verdict')!r}, not PASS")
+        if meta.get("verdict") not in ("PASS", "NEEDS WORK"):
+            errors.append(
+                f"review/out/{key}.out.md verdict must be PASS or NEEDS WORK, got {meta.get('verdict')!r}"
+            )
         try:
             p0 = int(meta.get("p0", 0))
             p1 = int(meta.get("p1", 0))

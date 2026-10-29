@@ -122,7 +122,7 @@ python3 "$SKILL_DIR/scripts/history_research.py" check ./<report-dir>/report.md 
 - 每个二级章节有内链来源；
 - `report.md`、`report.html`、`report.pdf` 的哈希一致（改过就重建）；
 - PDF 不是空文件/过小；
-- `--require-review`：7 个审阅输出都在、每个输出末尾的 JSON 与当前 `report.md`/`sources.tsv` 哈希一致、`verdict=PASS` 且 P0/P1 为 0、`coverage` 覆盖当前所有章节；覆盖矩阵每个章节都勾选，`review.md` 至少 7 条审阅记录。
+- `--require-review`：7 个审阅输出都在、每个输出末尾的 JSON 与当前 `report.md`/`sources.tsv` 哈希一致、P0/P1 为 0（`verdict` 可为 PASS 或 NEEDS WORK；P2 记录后延）、`coverage` 覆盖当前所有章节；覆盖矩阵每个章节都勾选，`review.md` 至少 7 条审阅记录。
 
 完成标准：`check --strict --require-review` 输出 `OK`；打开 HTML 和 PDF 目检封面、目录、中文、图片、分页、链接、页脚页码。PDF 引擎和排版问题见 [构建与交付](references/build-playbook.md)。
 

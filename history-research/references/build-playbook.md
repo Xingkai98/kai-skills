@@ -86,7 +86,7 @@ Markdown 里每张图必须是独立一行，下一行是来源行：
 `check --require-review` 是交付前的第二道闸门（第一道是 `--strict` 的内容/同步检查）：
 
 - `review/` 里必须有 7 个 `*.prompt.md`，`review/out/` 里必须有对应的 7 个非空输出；
-- 每个输出末尾的 JSON 必须绑定当前 `report.md` 和 `sources.tsv` 的哈希，`verdict=PASS` 且 P0/P1 为 0，`coverage` 包含所有章节；
+- 每个输出末尾的 JSON 必须绑定当前 `report.md` 和 `sources.tsv` 的哈希，P0/P1 为 0（`verdict` 可为 PASS 或 NEEDS WORK；P2 记录后延），`coverage` 包含所有章节；
 - `review/coverage.md` 必须包含当前报告的所有二级章节；
 - 覆盖矩阵里不能残留 `☐`，至少要有一个 `☑`；
 - `review.md` 至少 7 条填写的审阅记录，每条有角度。
