@@ -200,7 +200,7 @@ def parse_source_line(line: str, line_no: int) -> tuple[str, str, str]:
     raise BuildError(
         f"line {line_no}: image source must be an http(s) page link, or start with one of "
         f"{' / '.join(USER_IMAGE_LABELS)} and include who/when/where. "
-        "Example: `*图源：用户提供 · 2026-10-28 摄于北京海淀温泉镇*`"
+        "Example: `*图源：用户提供 · 2026-10-28 摄于某地现场*`"
     )
 
 
