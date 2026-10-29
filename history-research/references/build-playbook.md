@@ -9,7 +9,8 @@ my-report/
 ├── report.md            # 唯一真源；只改这里
 ├── sources.tsv          # 证据表：claim / source_url / source_title / quote / confidence / notes
 ├── review.md            # 审阅记录
-├── review/              # 无上下文审阅 prompts 与输出
+├── review/              # 无上下文审阅 prompts、输出、coverage.md、scopes.json
+├── review/manifests/    # 每次 review-kit 的版本快照（md+sources 复合 id）
 ├── assets/img/          # 构建时下载/复制的图片（可提交，保证 HTML 可移植）
 ├── report.html          # 生成物
 ├── report.pdf           # 生成物
@@ -32,8 +33,11 @@ python3 "$SKILL_DIR/scripts/history_research.py" build ./my-report/report.md
 # 3. 生成 7 个无上下文审阅 prompt
 python3 "$SKILL_DIR/scripts/history_research.py" review-kit ./my-report/report.md
 
-# 4. 审阅、修复后重新编译
+# 4. 审阅、修复后重新编译并重新绑定版本，再查看哪些角度需要重跑
 python3 "$SKILL_DIR/scripts/history_research.py" build ./my-report/report.md
+python3 "$SKILL_DIR/scripts/history_research.py" review-kit ./my-report/report.md
+python3 "$SKILL_DIR/scripts/history_research.py" review-impact ./my-report/report.md --write
+# 只重跑受影响角度：REVIEW_ONLY=01-facts,... scripts/run_reviews.sh ./my-report
 
 # 5. 交付校验：图片出处、引用密度、md/html/pdf 同步、审阅覆盖
 python3 "$SKILL_DIR/scripts/history_research.py" check ./my-report/report.md --strict --require-review

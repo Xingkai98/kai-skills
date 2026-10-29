@@ -4,6 +4,8 @@
 # cannot read review.md, earlier reviews, or project CLAUDE.md/settings.
 #
 # Usage: scripts/run_reviews.sh <report-dir> [model]
+#        REVIEW_ONLY=01-facts,05-structure-readability scripts/run_reviews.sh <report-dir>
+# Run `review-impact` first to see which angles actually need a rerun.
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
@@ -14,6 +16,7 @@ fi
 DIR="$(cd "$1" && pwd)"
 MODEL="${2:-${REVIEW_MODEL:-}}"
 CLAUDE_BIN="${CLAUDE_BIN:-claude}"
+ONLY="${REVIEW_ONLY:-}"
 
 if [[ ! -d "$DIR/review" ]]; then
   echo "error: $DIR/review not found; run review-kit first" >&2
@@ -57,6 +60,12 @@ echo
 
 for prompt in "${prompts[@]}"; do
   key="$(basename "$prompt" .prompt.md)"
+  if [[ -n "$ONLY" ]]; then
+    case ",$ONLY," in
+      *",$key,"*) ;;
+      *) echo "skip $key (not in REVIEW_ONLY)"; continue ;;
+    esac
+  fi
   out="$DIR/review/out/${key}.out.md"
   echo "==> $key"
   args=(

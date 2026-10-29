@@ -1,0 +1,23 @@
+{
+  "01-facts": [
+    "*"
+  ],
+  "02-chronology": [
+    "*"
+  ],
+  "03-context-contrarian": [
+    "*"
+  ],
+  "04-images-licensing": [
+    "@images"
+  ],
+  "05-structure-readability": [
+    "*"
+  ],
+  "06-render-qa": [
+    "@build"
+  ],
+  "07-red-team": [
+    "*"
+  ]
+}

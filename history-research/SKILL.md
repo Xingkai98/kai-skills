@@ -14,7 +14,8 @@ description: 深入调研任何人物、地点、事件、机构、技术、物�
 ├── report.md          # 唯一真源
 ├── sources.tsv        # 证据表（claim / url / quote / confidence）
 ├── review.md          # 审阅记录
-├── review/            # 7 个无上下文审阅 prompt + 输出 + 覆盖矩阵
+├── review/            # 7 个无上下文审阅 prompt + 输出 + 覆盖矩阵 + scopes.json + impact.md
+├── review/manifests/  # 每次 review-kit 的版本快照（md+sources 复合 id）
 ├── assets/img/        # 构建时下载的图片（保留本地副本）
 ├── report.html        # 由 report.md 生成
 ├── report.pdf         # 由 report.md 生成
@@ -107,9 +108,32 @@ python3 "$SKILL_DIR/scripts/history_research.py" review-kit ./<report-dir>/repor
 
 完成标准：7 个角度都有输出；`review/coverage.md` 每个章节都勾选；P0/P1 全部修复并重跑；`review.md` 记录轮次和未解决问题。
 
-### 6. 修复、重建、交付
+### 6. 修复、增量重跑、交付
 
-修复只改 `report.md`，然后重新编译并过交付闸门：
+修复只改 `report.md` 或 `sources.tsv`。先重新编译、重新绑定审阅版本，再看影响哪些审阅角度：
+
+```bash
+python3 "$SKILL_DIR/scripts/history_research.py" build ./<report-dir>/report.md
+python3 "$SKILL_DIR/scripts/history_research.py" review-kit ./<report-dir>/report.md
+python3 "$SKILL_DIR/scripts/history_research.py" review-impact ./<report-dir>/report.md --write
+```
+
+`review-kit` 必须重跑：它把 7 个 prompt 和清单重新绑定到当前 `report.md` + `sources.tsv`，旧 prompt 里的哈希会让重跑结果过不了闸门。
+
+`review-impact` 按 H2 章节正文、章节顺序、图片块、frontmatter、`sources.tsv` 和构建产物的哈希，输出每个角度是 `current`、`impacted` 还是 `not-impacted`，并给出建议的 `REVIEW_ONLY=...`。默认所有文字角度都依赖全部章节；只有图片、来源或构建产物单独变化时才能跳过一部分角度。某个角度只关心特定章节时，在 `review/scopes.json` 里按标题子串收窄，例如：
+
+```json
+{"03-context-contrarian": ["地方传说", "地名考"]}
+```
+
+只重跑受影响的角度：
+
+```bash
+REVIEW_ONLY=01-facts,05-structure-readability ... \
+  "$SKILL_DIR/scripts/run_reviews.sh" ./<report-dir>
+```
+
+增量模式只用于迭代；**最终交付仍要求 7 份审阅都绑定同一个整篇 `report.md` 哈希**，所以最后还要对最终版本跑一次完整 7 角度，再执行：
 
 ```bash
 python3 "$SKILL_DIR/scripts/history_research.py" build ./<report-dir>/report.md

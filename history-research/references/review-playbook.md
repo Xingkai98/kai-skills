@@ -66,9 +66,53 @@ SKILL_DIR="${CLAUDE_SKILL_DIR:-$HOME/.claude/skills/history-research}"
 1. 跑 7 个审阅，保存输出。
 2. 合并去重，按 P0 → P1 → P2 排序。
 3. 只改 `report.md`（不要手改 HTML/PDF）。
-4. 重新 `build`，再跑受影响的审阅（P0 修复后建议 7 个全跑）。
+4. 重新 `build` 和 `review-kit`（重新绑定当前哈希），再跑受影响的审阅（P0 修复后建议 7 个全跑）。
 5. 直到没有 P0/P1，且 coverage 矩阵填满。
 6. 在 `review.md` 写最终结论；未解决的 P2 和“无法核实”的事项写进报告的“还没答案”。
+
+## 增量影响面
+
+每轮全跑 7 个角度很贵，尤其是局部改一句话。`review-kit` 会写版本快照：
+
+```text
+review/manifest.json
+review/manifests/<review_id>.json
+review/scopes.json
+```
+
+`review_id` 是 `md_sha256 + sources_sha256` 的复合哈希（只改证据表而正文不变时不会覆盖旧快照）。清单包含：整篇哈希、`sources_sha256`、frontmatter 哈希、每个 H2 章节的正文哈希（不含图片块）、每节的图片块哈希、构建产物哈希和图片哈希。
+
+改完 `report.md` 或 `sources.tsv` 后：
+
+```bash
+python3 "$SKILL_DIR/scripts/history_research.py" build ./my-report/report.md
+python3 "$SKILL_DIR/scripts/history_research.py" review-kit ./my-report/report.md
+python3 "$SKILL_DIR/scripts/history_research.py" review-impact ./my-report/report.md --write
+```
+
+`review-kit` 必须重跑，否则 `REVIEW_ONLY` 用的 prompt 还绑着旧哈希。`review-impact` 输出 `current` / `impacted` / `not-impacted`：
+
+- 文字角度（`01`、`02`、`03`、`05`、`07`）：默认任何章节正文变化都要重跑；
+- `01-facts`、`02-chronology`、`03-context-contrarian`、`07-red-team`：`sources.tsv` 变化也要重跑；
+- `04-images-licensing`：只有图片块（图片行+图源行）或构建后的图片哈希变化时才重跑；
+- `06-render-qa`：只有 `report.md` 或构建产物变化时才重跑，纯 `sources.tsv` 变化可跳过。
+
+默认范围是保守的。某个角度只关心特定章节时，在 `review/scopes.json` 里按标题子串收窄（`["*"]` 表示全部章节，也可只在文件里写要覆盖的角度）：
+
+```json
+{
+  "03-context-contrarian": ["地方传说", "地名考"]
+}
+```
+
+只跑受影响的：
+
+```bash
+REVIEW_ONLY=01-facts,05-structure-readability \
+  "$SKILL_DIR/scripts/run_reviews.sh" ./my-report
+```
+
+**增量模式只用于迭代。** 最终交付仍要求 7 份审阅都绑定同一个整篇哈希；`check --require-review` 不会接受旧哈希的“局部豁免”。
 
 ## 审阅输出模板
 

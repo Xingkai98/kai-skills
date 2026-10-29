@@ -47,5 +47,32 @@ test -s report.pdf
 test -s report.build.json
 test -s review/01-facts.prompt.md
 test -s review/coverage.md
+test -s review/manifest.json
+test -s review/manifests/*.json
+test -s review/scopes.json
 grep -q '"angle": "01-facts"' review/01-facts.prompt.md
+
+# A sources-only change must add a new manifest, not overwrite the old one.
+first_manifest="$(ls review/manifests/*.json)"
+printf '补充主张\thttps://example.com/source\t示例来源\t示例引文\tlow\tsmoke test\n' >> sources.tsv
+python3 "$SKILL_DIR/scripts/history_research.py" review-kit report.md >/dev/null
+manifest_count="$(ls review/manifests/*.json | wc -l)"
+if [[ "$manifest_count" -ne 2 ]]; then
+  echo "error: expected 2 review manifests after a sources-only change, got $manifest_count" >&2
+  exit 1
+fi
+python3 - "$first_manifest" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+manifest = json.loads(Path("review/manifest.json").read_text(encoding="utf-8"))
+assert len(manifest["current"]) == 64, manifest["current"]
+assert manifest["current"] != manifest["md_sha256"], "review id must include sources"
+assert manifest["sources_sha256"]
+first = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+assert first["review_id"] != manifest["current"], "old manifest was overwritten"
+PY
+python3 "$SKILL_DIR/scripts/history_research.py" review-impact report.md --json --write >/dev/null
+test -s review/impact.md
 echo "smoke test OK: $TMP (cleaned up)"

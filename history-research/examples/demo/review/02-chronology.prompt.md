@@ -12,6 +12,7 @@ Read the entire report, every section. Do not sample.
 - Rendered PDF: `report.pdf`
 - Build manifest: `report.build.json`
 - Local images: `assets/img/`
+- Review ID (md_sha256 + sources_sha256): `ec212cb5e3c306d8e1ba681fd8565d10b9254538738b289fda99e024d05701e8`
 
 A required input that is missing or unreadable is a P0 finding, not a
 reason to review a degraded version.
@@ -59,6 +60,7 @@ End your output with exactly one fenced JSON block in this shape:
 ```json
 {
   "angle": "02-chronology",
+  "review_id": "ec212cb5e3c306d8e1ba681fd8565d10b9254538738b289fda99e024d05701e8",
   "md_sha256": "42258572b1a28c7bb55dbd767dc8fc658eaa488b30ff73a57a66d94e0423ee9b",
   "sources_sha256": "67a19033430f47cf9063e4d6811c8a4a3dd337bebaead395c34a09be4dde0b2d",
   "verdict": "PASS",

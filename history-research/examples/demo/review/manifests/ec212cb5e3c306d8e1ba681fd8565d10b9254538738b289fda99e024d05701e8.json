@@ -1,0 +1,122 @@
+{
+  "version": 2,
+  "review_id": "ec212cb5e3c306d8e1ba681fd8565d10b9254538738b289fda99e024d05701e8",
+  "md_sha256": "42258572b1a28c7bb55dbd767dc8fc658eaa488b30ff73a57a66d94e0423ee9b",
+  "sources_sha256": "67a19033430f47cf9063e4d6811c8a4a3dd337bebaead395c34a09be4dde0b2d",
+  "frontmatter_sha256": "db4f28da1e85976c58d140be701251a4e163241636676b5ec0eedc2adfe9fb60",
+  "created_at": "2026-10-29T17:05:47.975156+00:00",
+  "sections": [
+    {
+      "title": "（前言）",
+      "sha256": "1d144fc431dbd6be380a7fbb06db7a35e26248d31ed285907c8d5864b1f4213c",
+      "text_sha256": "1d144fc431dbd6be380a7fbb06db7a35e26248d31ed285907c8d5864b1f4213c",
+      "images": []
+    },
+    {
+      "title": "问题的提出",
+      "sha256": "4a50cedba846df989dff4a81d68e29e6595206fcb3e7475961ba5e0e3b379d09",
+      "text_sha256": "4a50cedba846df989dff4a81d68e29e6595206fcb3e7475961ba5e0e3b379d09",
+      "images": []
+    },
+    {
+      "title": "时间轴",
+      "sha256": "e181af0a77135f36e4979f291f86a5297716ee6aa22b6db96cbd1427622dd526",
+      "text_sha256": "ab00fee4acdfdd6bce38a49ff5e1bcd5829795f4aa854a8b95fdf10c2a297635",
+      "images": [
+        "36e87b39337aa2079995deacc7c19cdcae05b1403c42624f3d2d96980e9fff96"
+      ]
+    },
+    {
+      "title": "一、渠：新渠走老线",
+      "sha256": "e40b161a756241a855876d1db7d9a8531974e06e1717946f9dca43840095a961",
+      "text_sha256": "e40b161a756241a855876d1db7d9a8531974e06e1717946f9dca43840095a961",
+      "images": []
+    },
+    {
+      "title": "二、镇：泉、祠、码头",
+      "sha256": "5b244787963a6b81a3ae9a5c856d640c4327ae6d01761d9db997da106e2f5b29",
+      "text_sha256": "5b244787963a6b81a3ae9a5c856d640c4327ae6d01761d9db997da106e2f5b29",
+      "images": []
+    },
+    {
+      "title": "信史、争议与传说",
+      "sha256": "c8372d83ab748e9a68d34cff70b06e317d731bb43b97d70474e2b02afe43d84d",
+      "text_sha256": "c8372d83ab748e9a68d34cff70b06e317d731bb43b97d70474e2b02afe43d84d",
+      "images": []
+    },
+    {
+      "title": "参考资料",
+      "sha256": "d4d013ca4585f37d84bf0a467e452232657ba7f4488948f2e74dd13f9423cf76",
+      "text_sha256": "d4d013ca4585f37d84bf0a467e452232657ba7f4488948f2e74dd13f9423cf76",
+      "images": []
+    }
+  ],
+  "section_order": [
+    "（前言）",
+    "问题的提出",
+    "时间轴",
+    "一、渠：新渠走老线",
+    "二、镇：泉、祠、码头",
+    "信史、争议与传说",
+    "参考资料"
+  ],
+  "build_sha256": "24d75ab82266c0d051a974c3e3ad5fbdf62e2f75373954caba7013b73ed38e43",
+  "build_images": [
+    {
+      "image_url": "assets/timeline.png",
+      "source_url": "https://swj.beijing.gov.cn/swdt/swyw/202606/t20260610_4693988.html",
+      "sha256": "1c29fc454b8a5b650432c90ca3b229627b9193bda691e427b58acc9bbd61ce17"
+    }
+  ],
+  "angles": [
+    {
+      "key": "01-facts",
+      "label": "事实与来源核验",
+      "scope": [
+        "*"
+      ]
+    },
+    {
+      "key": "02-chronology",
+      "label": "时间线与因果",
+      "scope": [
+        "*"
+      ]
+    },
+    {
+      "key": "03-context-contrarian",
+      "label": "地方细节与反方证据",
+      "scope": [
+        "*"
+      ]
+    },
+    {
+      "key": "04-images-licensing",
+      "label": "图片、出处与许可",
+      "scope": [
+        "@images"
+      ]
+    },
+    {
+      "key": "05-structure-readability",
+      "label": "结构与可读性",
+      "scope": [
+        "*"
+      ]
+    },
+    {
+      "key": "06-render-qa",
+      "label": "HTML/PDF 渲染与交付",
+      "scope": [
+        "@build"
+      ]
+    },
+    {
+      "key": "07-red-team",
+      "label": "红队：努力推翻报告",
+      "scope": [
+        "*"
+      ]
+    }
+  ]
+}

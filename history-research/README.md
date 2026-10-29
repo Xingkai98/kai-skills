@@ -48,8 +48,12 @@ python3 "$SKILL_DIR/scripts/history_research.py" init ./my-report --title "我�
 python3 "$SKILL_DIR/scripts/history_research.py" build ./my-report/report.md        # 先出审阅版
 python3 "$SKILL_DIR/scripts/history_research.py" review-kit ./my-report/report.md   # 7 个审阅 prompt
 # 用 7 个 fresh agent 审阅；输出存到 my-report/review/out/<key>.out.md，末尾带 JSON
-# 修复 P0/P1 后重跑
+# 修复 P0/P1 后：重新编译、重新绑定审阅版本，再看影响面
 python3 "$SKILL_DIR/scripts/history_research.py" build ./my-report/report.md
+python3 "$SKILL_DIR/scripts/history_research.py" review-kit ./my-report/report.md
+python3 "$SKILL_DIR/scripts/history_research.py" review-impact ./my-report/report.md --write
+# REVIEW_ONLY=01-facts,... scripts/run_reviews.sh ./my-report
+# 最终交付：对最终版本跑完整 7 角度，再过闸门
 python3 "$SKILL_DIR/scripts/history_research.py" check ./my-report/report.md --strict --require-review
 ```
 
@@ -60,7 +64,8 @@ my-report/
 ├── report.md          # 唯一真源
 ├── sources.tsv        # 证据表
 ├── review.md          # 审阅记录
-├── review/            # 7 个审阅 prompt + 覆盖矩阵
+├── review/            # 7 个审阅 prompt + 覆盖矩阵 + scopes.json + impact.md
+├── review/manifests/  # 每次 review-kit 的版本快照（md+sources 复合 id）
 ├── assets/img/        # 图片本地副本（保留原始链接）
 ├── report.html
 ├── report.pdf

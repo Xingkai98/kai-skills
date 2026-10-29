@@ -998,6 +998,12 @@ def review_gate_errors(report_dir: Path, sections: list[str], md_hash: str) -> l
                 f"review/out/{key}.out.md reviewed a different report.md version "
                 f"({meta.get('md_sha256')!r}); rebuild and re-review"
             )
+        expected_review_id = review_manifest_id(md_hash, sources_hash)
+        review_id = meta.get("review_id")
+        if review_id and review_id != expected_review_id:
+            errors.append(
+                f"review/out/{key}.out.md review_id does not match the current report + sources"
+            )
         if meta.get("sources_sha256") != sources_hash:
             errors.append(
                 f"review/out/{key}.out.md reviewed a different sources.tsv version; re-review"
@@ -1380,6 +1386,194 @@ refute a claim, say what evidence would be needed. Default to skepticism.""",
 ]
 
 
+ANGLE_KEYS = {key for key, _, _ in REVIEW_ANGLES}
+# These angles verify claims against sources.tsv, so a source-only change invalidates them.
+SOURCE_ANGLES = {"01-facts", "02-chronology", "03-context-contrarian", "07-red-team"}
+# Defaults are conservative: every text angle depends on all sections. A report can
+# narrow an angle in review/scopes.json by listing section-title patterns.
+DEFAULT_SCOPES: dict[str, list[str]] = {key: ["*"] for key in ANGLE_KEYS}
+DEFAULT_SCOPES["04-images-licensing"] = ["@images"]
+DEFAULT_SCOPES["06-render-qa"] = ["@build"]
+
+
+def frontmatter_hash(meta: dict[str, Any]) -> str:
+    return sha256_bytes(
+        json.dumps(meta, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")
+    )
+
+
+def review_manifest_id(md_hash: str, sources_hash: str) -> str:
+    """Reviews bind to both the report and the evidence table, so key on both."""
+    return sha256_bytes(f"{md_hash}\n{sources_hash}".encode("utf-8"))
+
+
+def load_review_scopes(report_dir: Path) -> dict[str, list[str]]:
+    """Optional review/scopes.json override: angle -> section-title substring patterns."""
+    path = report_dir / "review" / "scopes.json"
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        print(f"warning: cannot read {path}: {exc}; using default scopes", file=sys.stderr)
+        return {}
+    if not isinstance(data, dict):
+        print(f"warning: {path} must be a JSON object; using default scopes", file=sys.stderr)
+        return {}
+    scopes: dict[str, list[str]] = {}
+    for key, value in data.items():
+        if key not in ANGLE_KEYS:
+            print(f"warning: {path}: unknown angle {key!r}; ignored", file=sys.stderr)
+            continue
+        if isinstance(value, str):
+            value = [value]
+        if not isinstance(value, list) or not value or not all(
+            isinstance(item, str) and item for item in value
+        ):
+            print(
+                f"warning: {path}: scope for {key!r} must be a non-empty list of section patterns",
+                file=sys.stderr,
+            )
+            continue
+        special = [item for item in value if item in ("@images", "@build")]
+        if special and len(value) > 1:
+            print(
+                f"warning: {path}: {key!r} mixes {special[0]} with section patterns; ignored",
+                file=sys.stderr,
+            )
+            continue
+        scopes[key] = value
+    return scopes
+
+
+def angle_scope(key: str, scopes: dict[str, list[str]]) -> list[str]:
+    return scopes.get(key) or DEFAULT_SCOPES.get(key) or ["*"]
+
+
+def _image_blocks(lines: list[str]) -> list[tuple[int, int, str]]:
+    """Return (start, end, hash) for standalone image blocks outside code fences."""
+    blocks: list[tuple[int, int, str]] = []
+    in_fence = False
+    i = 0
+    while i < len(lines):
+        stripped = lines[i].strip()
+        if stripped.startswith("```"):
+            in_fence = not in_fence
+            i += 1
+            continue
+        if in_fence or not IMAGE_RE.match(stripped):
+            i += 1
+            continue
+        start = i
+        end = i
+        block = stripped
+        j = i + 1
+        if j < len(lines) and not lines[j].strip():
+            j += 1
+        if j < len(lines) and SOURCE_RE.match(lines[j].strip()):
+            block += "\n" + lines[j].strip()
+            end = j
+        blocks.append((start, end, sha256_bytes(block.encode("utf-8"))))
+        i = end + 1
+    return blocks
+
+
+def section_hashes(lines: list[str]) -> dict[str, Any]:
+    """Text hash excludes image blocks; image blocks are hashed separately."""
+    blocks = _image_blocks(lines)
+    excluded: set[int] = set()
+    for start, end, _ in blocks:
+        excluded.update(range(start, end + 1))
+    prose = [line for index, line in enumerate(lines) if index not in excluded]
+    return {
+        "sha256": sha256_bytes("\n".join(lines).encode("utf-8")),
+        "text_sha256": sha256_bytes("\n".join(prose).encode("utf-8")),
+        "images": [block_hash for _, _, block_hash in blocks],
+    }
+
+
+def split_sections(body: str) -> list[dict[str, Any]]:
+    """Split on H2 headings (ignoring fenced code), with a preamble bucket."""
+    sections: list[dict[str, Any]] = []
+    current_title = "（前言）"
+    current_lines: list[str] = []
+
+    def flush() -> None:
+        if not current_lines and current_title == "（前言）":
+            return
+        text = "\n".join(current_lines)
+        if not text.strip():
+            return
+        sections.append({"title": current_title, **section_hashes(current_lines)})
+
+    in_fence = False
+    for line in body.splitlines():
+        if line.strip().startswith("```"):
+            in_fence = not in_fence
+        match = None if in_fence else re.match(r"^##\s+(.+?)\s*$", line)
+        if match:
+            flush()
+            current_title = match.group(1).strip()
+            current_lines = []
+        else:
+            current_lines.append(line)
+    flush()
+    return sections
+
+
+def build_state(report_dir: Path) -> dict[str, Any]:
+    path = report_dir / "report.build.json"
+    if not path.exists():
+        return {"build_sha256": "", "build_images": [], "md_sha256": ""}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return {"build_sha256": "", "build_images": [], "md_sha256": ""}
+    build_sha256 = sha256_bytes(
+        f"{data.get('html_sha256', '')}:{data.get('pdf_sha256', '')}".encode("utf-8")
+    )
+    images = [
+        {
+            "image_url": str(item.get("image_url", "")),
+            "source_url": str(item.get("source_url", "")),
+            "sha256": str(item.get("sha256", "")),
+        }
+        for item in data.get("images", [])
+    ]
+    return {
+        "build_sha256": build_sha256,
+        "build_images": images,
+        "md_sha256": str(data.get("md_sha256", "")),
+    }
+
+
+def review_manifest(
+    ctx: BuildContext,
+    review_id: str,
+    md_hash: str,
+    sources_hash: str,
+    scopes: dict[str, list[str]],
+) -> dict[str, Any]:
+    sections = split_sections(ctx.body)
+    state = build_state(ctx.report_dir)
+    return {
+        "version": 2,
+        "review_id": review_id,
+        "md_sha256": md_hash,
+        "sources_sha256": sources_hash,
+        "frontmatter_sha256": frontmatter_hash(ctx.meta),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "sections": sections,
+        "section_order": [section["title"] for section in sections],
+        "build_sha256": state["build_sha256"],
+        "build_images": state["build_images"],
+        "angles": [
+            {"key": key, "label": label, "scope": angle_scope(key, scopes)}
+            for key, label, _ in REVIEW_ANGLES
+        ],
+    }
+
+
 def review_prompt(
     md_path: Path,
     sources_path: Path,
@@ -1404,7 +1598,8 @@ def review_prompt(
         f"- Rendered HTML: `{html_path.name}`\n"
         f"- Rendered PDF: `{pdf_path.name}`\n"
         "- Build manifest: `report.build.json`\n"
-        "- Local images: `assets/img/`\n\n"
+        "- Local images: `assets/img/`\n"
+        f"- Review ID (md_sha256 + sources_sha256): `{review_manifest_id(md_hash, sources_hash)}`\n\n"
         "A required input that is missing or unreadable is a P0 finding, not a\n"
         "reason to review a degraded version.\n\n"
         "## Sections to cover\n\n"
@@ -1431,6 +1626,7 @@ def review_prompt(
         "```json\n"
         "{\n"
         f'  "angle": "{key}",\n'
+        f'  "review_id": "{review_manifest_id(md_hash, sources_hash)}",\n'
         f'  "md_sha256": "{md_hash}",\n'
         f'  "sources_sha256": "{sources_hash}",\n'
         '  "verdict": "PASS",\n'
@@ -1456,7 +1652,10 @@ def cmd_review_kit(args: argparse.Namespace) -> int:
     sources_path = report_dir / "sources.tsv"
     html_path = report_dir / "report.html"
     pdf_path = report_dir / "report.pdf"
-    sections = [m.group(1).strip() for m in SECTION_RE.finditer(strip_fenced_code(ctx.body))]
+    section_objs = split_sections(ctx.body)
+    # The preamble is tracked for impact analysis but is not a coverage row; reviewers
+    # still read it as part of the whole report.
+    sections = [section["title"] for section in section_objs if section["title"] != "（前言）"]
     if not sections:
         sections = ["（未检测到二级标题）"]
     if not html_path.exists() or not pdf_path.exists():
@@ -1501,6 +1700,34 @@ def cmd_review_kit(args: argparse.Namespace) -> int:
 
     md_hash = sha256_file(md_path)
     sources_hash = sha256_file(sources_path) if sources_path.exists() else ""
+    scopes_path = review_dir / "scopes.json"
+    if not scopes_path.exists():
+        default_scopes = {key: DEFAULT_SCOPES[key] for key, _, _ in REVIEW_ANGLES}
+        scopes_path.write_text(
+            json.dumps(default_scopes, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+    scopes = load_review_scopes(report_dir)
+    review_id = review_manifest_id(md_hash, sources_hash)
+    manifests_dir = review_dir / "manifests"
+    manifests_dir.mkdir(exist_ok=True)
+    manifest = review_manifest(ctx, review_id, md_hash, sources_hash, scopes)
+    (manifests_dir / f"{review_id}.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    (review_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "current": review_id,
+                "md_sha256": md_hash,
+                "sources_sha256": sources_hash,
+                "manifest": f"manifests/{review_id}.json",
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     canonical = {f"{key}.prompt.md" for key, _, _ in REVIEW_ANGLES}
     for stale in review_dir.glob("*.prompt.md"):
         if stale.name not in canonical:
@@ -1526,10 +1753,15 @@ def cmd_review_kit(args: argparse.Namespace) -> int:
         2. **通读全文**，不要抽查。每个 agent 都要对每个章节给出结论。
         3. 审阅输出存为 `review/out/<key>.out.md`，然后把问题修进 `report.md`。
         4. P0/P1 必须修复并重跑对应审阅；P2 可记录后延。
-        5. 每个输出末尾必须有机器可读 JSON（`angle` / `md_sha256` / `verdict` /
-           `p0` / `p1` / `coverage`）；`check --require-review` 会校验版本哈希、
-           PASS 结论、P0/P1 为零、以及每个章节都在 coverage 里。
-        6. 把每轮结果记进 `../review.md`，并更新 `coverage.md` 的勾选。
+        5. 每个输出末尾必须有机器可读 JSON（`angle` / `review_id` / `md_sha256` /
+           `sources_sha256` / `verdict` / `p0` / `p1` / `coverage`）；
+           `check --require-review` 会校验版本哈希、P0/P1 为零、以及每个章节都在
+           coverage 里。
+        6. 改完 `report.md` 后依次运行 `build`、`review-kit`（重新绑定哈希并生成
+           新 prompt）、`review-impact`，只重跑受影响的角度；可用 `scopes.json`
+           按报告收窄某个角度的章节范围。最终交付前仍要对同一整篇哈希跑完
+           7 个角度（见 `../review/impact.md`）。
+        7. 把每轮结果记进 `../review.md`，并更新 `coverage.md` 的勾选。
 
         ## 运行
 
@@ -1550,6 +1782,210 @@ def cmd_review_kit(args: argparse.Namespace) -> int:
     (review_dir / "README.md").write_text(readme, encoding="utf-8")
     print(f"review kit written to {review_dir}")
     print(f"  {len(REVIEW_ANGLES)} prompts, {len(sections)} sections in coverage.md")
+    print(f"  review id: {review_id}")
+    print(f"  manifest: {review_dir / 'manifests' / (review_id + '.json')}")
+    print(f"  scopes: {scopes_path}")
+    return 0
+
+
+def load_review_manifest(report_dir: Path, review_id: str) -> dict[str, Any] | None:
+    path = report_dir / "review" / "manifests" / f"{review_id}.json"
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def angle_impacted(
+    key: str,
+    changed_text: list[str],
+    removed: list[str],
+    front_changed: bool,
+    sources_changed: bool,
+    old_sections: dict[str, dict[str, Any]],
+    new_sections: dict[str, dict[str, Any]],
+    old_build_images: list[dict[str, str]],
+    new_build_images: list[dict[str, str]],
+    old_md: str,
+    current_md: str,
+    old_build: str,
+    new_build: str,
+    scopes: dict[str, list[str]],
+) -> bool:
+    scope = angle_scope(key, scopes)
+    if scope == ["@images"]:
+        old_images = [h for section in old_sections.values() for h in section.get("images", [])]
+        new_images = [h for section in new_sections.values() for h in section.get("images", [])]
+        return old_images != new_images or old_build_images != new_build_images
+    if scope == ["@build"]:
+        return old_md != current_md or old_build != new_build
+    changed = changed_text + removed
+    if "*" in scope:
+        local = bool(changed)
+    else:
+        local = any(any(pattern in title for pattern in scope) for title in changed)
+    return local or front_changed or (sources_changed and key in SOURCE_ANGLES)
+
+
+def cmd_review_impact(args: argparse.Namespace) -> int:
+    md_path = Path(args.report).resolve()
+    ctx = load_context(md_path)
+    report_dir = ctx.report_dir
+    current_md = sha256_file(md_path)
+    sources_path = report_dir / "sources.tsv"
+    current_sources = sha256_file(sources_path) if sources_path.exists() else ""
+    current_front = frontmatter_hash(ctx.meta)
+    current_sections = {section["title"]: section for section in split_sections(ctx.body)}
+    current_build = build_state(report_dir)
+    if current_build["md_sha256"] != current_md:
+        print(
+            "warning: report.html/report.pdf are older than report.md; run build before review-impact",
+            file=sys.stderr,
+        )
+    scopes = load_review_scopes(report_dir)
+
+    rows: list[dict[str, Any]] = []
+    rerun: list[str] = []
+    for key, label, _ in REVIEW_ANGLES:
+        out_path = report_dir / "review" / "out" / f"{key}.out.md"
+        if not out_path.exists() or out_path.stat().st_size == 0:
+            rows.append({"angle": key, "label": label, "status": "missing", "changed": [], "reason": "no output"})
+            rerun.append(key)
+            continue
+        meta = extract_review_metadata(out_path.read_text(encoding="utf-8", errors="ignore"))
+        if meta is None:
+            rows.append({"angle": key, "label": label, "status": "missing-metadata", "changed": [], "reason": "no JSON block"})
+            rerun.append(key)
+            continue
+        review_id = meta.get("review_id") or meta.get("md_sha256")
+        old_manifest = load_review_manifest(report_dir, str(review_id or ""))
+        if old_manifest is None:
+            rows.append(
+                {
+                    "angle": key,
+                    "label": label,
+                    "status": "stale-no-manifest",
+                    "changed": [],
+                    "reason": "reviewed an older version and no section manifest was kept",
+                }
+            )
+            rerun.append(key)
+            continue
+        old_sections = {section["title"]: section for section in old_manifest.get("sections", [])}
+        old_order = old_manifest.get("section_order") or list(old_sections)
+        order_changed = old_order != list(current_sections)
+        removed = [title for title in old_sections if title not in current_sections]
+        changed_text: list[str] = []
+        changed_images: list[str] = []
+        for title, section in current_sections.items():
+            old = old_sections.get(title)
+            if old is None:
+                changed_text.append(title)
+                if section.get("images"):
+                    changed_images.append(title)
+                continue
+            old_text = old.get("text_sha256") or old.get("sha256")
+            if old_text != section.get("text_sha256"):
+                changed_text.append(title)
+            if old.get("images", []) != section.get("images", []):
+                changed_images.append(title)
+        front_changed = old_manifest.get("frontmatter_sha256") != current_front
+        sources_changed = old_manifest.get("sources_sha256") != current_sources
+        old_md = str(old_manifest.get("md_sha256", ""))
+        old_build = str(old_manifest.get("build_sha256", ""))
+        same_md = old_md == current_md
+        impacted = angle_impacted(
+            key,
+            changed_text + (["（章节顺序）"] if order_changed else []),
+            removed,
+            front_changed,
+            sources_changed,
+            old_sections,
+            current_sections,
+            old_manifest.get("build_images", []),
+            current_build["build_images"],
+            old_md,
+            current_md,
+            old_build,
+            current_build["build_sha256"],
+            scopes,
+        )
+        image_only = set(changed_images) - set(changed_text)
+        changed_labels: list[str] = []
+        for title in current_sections:
+            if title in changed_text:
+                changed_labels.append(title)
+            elif title in image_only:
+                changed_labels.append(f"{title}（图片）")
+        if order_changed:
+            changed_labels.append("（章节顺序）")
+        changed_labels.extend(f"已删除: {title}" for title in removed)
+        reasons: list[str] = []
+        if impacted:
+            if front_changed:
+                reasons.append("frontmatter changed")
+            if sources_changed and key in SOURCE_ANGLES:
+                reasons.append("sources.tsv changed")
+            if key == "04-images-licensing" and (
+                changed_images or old_manifest.get("build_images", []) != current_build["build_images"]
+            ):
+                reasons.append("image block or build image changed")
+            if key == "06-render-qa" and old_md != current_md:
+                reasons.append("report.md changed; rebuild and re-check render")
+        rows.append(
+            {
+                "angle": key,
+                "label": label,
+                "status": "current" if same_md and not impacted else ("impacted" if impacted else "not-impacted"),
+                "changed": changed_labels,
+                "reason": "；".join(reasons),
+            }
+        )
+        if impacted:
+            rerun.append(key)
+
+    lines = [
+        "# 审阅影响面",
+        "",
+        f"- 当前 `report.md` SHA256：`{current_md}`",
+        f"- 当前 `sources.tsv` SHA256：`{current_sources}`",
+        f"- 当前构建产物 SHA256：`{current_build['build_sha256']}`",
+        "",
+        "| 角度 | 状态 | 变更章节 | 说明 |",
+        "|---|---|---|---|",
+    ]
+    for row in rows:
+        changed = "、".join(row["changed"]) if row["changed"] else "—"
+        lines.append(f"| {row['label']} (`{row['angle']}`) | {row['status']} | {changed} | {row['reason']} |")
+    lines.append("")
+    if rerun:
+        lines.append("建议重跑：`REVIEW_ONLY=" + ",".join(rerun) + " scripts/run_reviews.sh <report-dir>`")
+    else:
+        lines.append("所有角度都绑定当前版本，可以直接过 `check --require-review`。")
+    lines.append("")
+    lines.append("增量重跑只用于迭代；最终交付仍要对同一整篇哈希跑完 7 个角度。")
+    text = "\n".join(lines) + "\n"
+    if args.write:
+        (report_dir / "review" / "impact.md").write_text(text, encoding="utf-8")
+        print(f"written: {report_dir / 'review' / 'impact.md'}", file=sys.stderr)
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "current_md_sha256": current_md,
+                    "current_sources_sha256": current_sources,
+                    "current_build_sha256": current_build["build_sha256"],
+                    "angles": rows,
+                    "rerun": rerun,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+    else:
+        print(text)
     return 0
 
 
@@ -1591,6 +2027,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_review = sub.add_parser("review-kit", help="generate context-free reviewer prompts")
     p_review.add_argument("report")
     p_review.set_defaults(func=cmd_review_kit)
+
+    p_impact = sub.add_parser("review-impact", help="show which review angles a change invalidates")
+    p_impact.add_argument("report")
+    p_impact.add_argument("--json", action="store_true")
+    p_impact.add_argument("--write", action="store_true", help="write review/impact.md")
+    p_impact.set_defaults(func=cmd_review_impact)
 
     return parser
 
